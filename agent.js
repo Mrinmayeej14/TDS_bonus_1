@@ -7,6 +7,7 @@
  *       No logic and no names have been changed.
  */
 import { DEFAULTS, TOOLS, UI_STRINGS } from './src/constants.js';
+import { callLLM as llmCall, parseAPIResponse as llmParse } from './src/services/llm.js';
 import * as renderer from './src/ui/renderer.js';
 import { wireEvents, wireDragAndDrop, wireContextMenu } from './src/ui/events.js';
 import { debounce as utilDebounce, preventDefaults as utilPreventDefaults } from './src/utils/helpers.js';
@@ -452,106 +453,11 @@ class GyaanSetu {
   // LLM Calls
   // ===========================================================================
   async callLLM(conversation) {
-    // Build messages in OpenAI chat-like shape
-    const messagesForApi = conversation.messages
-      .map((m) => {
-        if (m.role === 'tool')
-          return { role: 'system', content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) };
-        return { role: m.role, content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content) };
-      })
-      .filter((m) => !!m.content);
-
-    const { provider, apiKey, model, maxTokens, temperature } = this.state.settings.llm || {};
-    if (!provider) throw new Error('No LLM provider configured.');
-
-    // Demo fallback
-    if (!apiKey) {
-      return { choices: [{ message: { content: 'Demo response: provide an API key in settings to use real models.' } }] };
-    }
-
-    let apiUrl;
-    const headers = { 'Content-Type': 'application/json' };
-    let body;
-
-    switch (provider) {
-      case 'openai':
-        apiUrl = 'https://api.openai.com/v1/chat/completions';
-        headers.Authorization = `Bearer ${apiKey}`;
-        body = { model, messages: messagesForApi, max_tokens: maxTokens, temperature };
-        break;
-
-      case 'google':
-        apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-        body = {
-          messages: messagesForApi.map((m) => ({ role: m.role === 'assistant' ? 'model' : 'user', content: m.content })),
-          temperature,
-          maxOutputTokens: maxTokens,
-        };
-        break;
-
-      case 'aipipe':
-        // OpenRouter-compatible proxy
-        apiUrl = 'https://aipipe.org/openrouter/v1/chat/completions';
-        headers.Authorization = `Bearer ${apiKey}`;
-        body = {
-          model: model || 'openai/gpt-4o-mini',
-          messages: messagesForApi.map((m) => ({ role: m.role, content: m.content })),
-          max_tokens: maxTokens,
-          temperature,
-        };
-        break;
-
-      default:
-        throw new Error(`Unsupported provider: ${provider}`);
-    }
-
-    try {
-      const resp = await fetch(apiUrl, { method: 'POST', headers, body: JSON.stringify(body) });
-      if (!resp.ok) {
-        let errText = `${resp.status} ${resp.statusText}`;
-        try {
-          const errJson = await resp.json();
-          errText = errJson.error?.message || JSON.stringify(errJson);
-        } catch (_) { }
-        throw new Error(
-          `Model not supported for your API key — change model in settings. (Status: ${resp.status}, Details: ${errText})`
-        );
-      }
-      const data = await resp.json();
-      return data;
-    } catch (err) {
-      throw new Error(err.message || 'Network error');
-    }
+    return llmCall(conversation, this.state.settings);
   }
 
   parseAPIResponse(data, provider) {
-    try {
-      switch (provider) {
-        case 'openai':
-        case 'aipipe':
-          if (data.choices && data.choices.length > 0) {
-            return data.choices[0].message || { content: data.choices[0].text || '' };
-          }
-          if (data.candidates && data.candidates.length > 0) {
-            const parts = data.candidates[0].content?.parts || data.candidates[0].content || [];
-            const text = Array.isArray(parts) ? parts.map((p) => p.text || p).join('') : parts;
-            return { content: text };
-          }
-          return { content: JSON.stringify(data) };
-
-        case 'google':
-          if (data.candidates && data.candidates.length) {
-            return { content: data.candidates[0].content.parts[0].text };
-          }
-          return { content: JSON.stringify(data) };
-
-        default:
-          return { content: 'Response format not recognized.' };
-      }
-    } catch (e) {
-      console.error('Error parsing API response:', e, data);
-      throw new Error('Could not parse the API response.');
-    }
+    return llmParse(data, provider);
   }
 
   // ===========================================================================
