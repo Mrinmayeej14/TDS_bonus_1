@@ -1,77 +1,110 @@
 /**
  * LeafAI - Constants and Defaults (ES Modules)
+ * Refactored for readability and consistency. No logic or names changed.
  */
 
+// -----------------------------------------------------------------------------
+// Defaults
+// -----------------------------------------------------------------------------
+
 export const DEFAULTS = {
-  llm: { provider: 'aipipe', apiKey: '', model: 'default', maxTokens: 2000, temperature: 0.7 },
-  ui: { theme: 'auto', animationsEnabled: true, soundEnabled: false, fontSize: 'medium' },
-  voice: { enabled: false, outputEnabled: false, language: 'en-US', speechRate: 1.0 },
-  advanced: { autoSave: true, analyticsEnabled: false, maxHistory: 100 }
+  llm: {
+    provider: 'aipipe',
+    apiKey: '',
+    model: 'default',
+    maxTokens: 2000,
+    temperature: 0.7,
+  },
+  ui: {
+    theme: 'auto',
+    animationsEnabled: true,
+    soundEnabled: false,
+    fontSize: 'medium',
+  },
+  voice: {
+    enabled: false,
+    outputEnabled: false,
+    language: 'en-US',
+    speechRate: 1.0,
+  },
+  advanced: {
+    autoSave: true,
+    analyticsEnabled: false,
+    maxHistory: 100,
+  },
 };
+
+// -----------------------------------------------------------------------------
+// Tools
+// -----------------------------------------------------------------------------
 
 export const TOOLS = [
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "web_search",
-      description: "Search the web for current information",
+      name: 'web_search',
+      description: 'Search the web for current information',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
-          query: { type: "string" },
-          results: { type: "integer", default: 5 }
+          query: { type: 'string' },
+          results: { type: 'integer', default: 5 },
         },
-        required: ["query"]
-      }
-    }
+        required: ['query'],
+      },
+    },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "execute_code",
-      description: "Execute JavaScript code safely",
+      name: 'execute_code',
+      description: 'Execute JavaScript code safely',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
-          code: { type: "string" }
+          code: { type: 'string' },
         },
-        required: ["code"]
-      }
-    }
+        required: ['code'],
+      },
+    },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "process_file",
-      description: "Process and analyze uploaded files",
+      name: 'process_file',
+      description: 'Process and analyze uploaded files',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
-          fileId: { type: "string" },
-          operation: { type: "string", default: "analyze" }
+          fileId: { type: 'string' },
+          operation: { type: 'string', default: 'analyze' },
         },
-        required: ["fileId"]
-      }
-    }
+        required: ['fileId'],
+      },
+    },
   },
   {
-    type: "function",
+    type: 'function',
     function: {
-      name: "create_visualization",
-      description: "Create data visualizations",
+      name: 'create_visualization',
+      description: 'Create data visualizations',
       parameters: {
-        type: "object",
+        type: 'object',
         properties: {
-          data: { type: "string" },
-          type: { type: "string", default: "line" },
-          title: { type: "string" }
+          data: { type: 'string' },
+          type: { type: 'string', default: 'line' },
+          title: { type: 'string' },
         },
-        required: ["data"]
-      }
-    }
-  }
+        required: ['data'],
+      },
+    },
+  },
 ];
 
+// -----------------------------------------------------------------------------
+// UI Strings
+// -----------------------------------------------------------------------------
+
 export const UI_STRINGS = {
-  welcome: 'Welcome to LeafAI! How can I assist you?'
+  welcome: 'Welcome to LeafAI! How can I assist you?',
 };
